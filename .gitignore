@@ -1,0 +1,5 @@
+temp
+.terraform/
+.idea/
+.venv/
+.env/
