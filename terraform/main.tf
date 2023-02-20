@@ -77,30 +77,26 @@ resource "aws_iam_role_policy" "lambda_funtion_policy" {
   name = local.sm_trigger_policy_name
   role = aws_iam_role.lambda_function_role.id
 
-  policy = <<EOF
-    {
-    "Version": "2012-10-17",
-    "Statement": [
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
         {
-        "Action": [
-            "states:StartExecution", 
-        ],
-        "Effect": "Allow",
-        "Resource": "${aws_sfn_state_machine.filename_update_state_machine.arn}"
+        Action =  [ "states:StartExecution",]
+        Effect = "Allow"
+        Resource =  "${aws_sfn_state_machine.filename_update_state_machine.arn}"
         },
         {
-        "Action": [
+        Action = [
             "s3:*",
             "lambda:*", 
-            "cloudwatch:*" 
+            "cloudwatch:*", 
         ],
-        "Effect": "Allow",
-        "Resource": "*"
+        Effect = "Allow",
+        Resource =  "*"
         }
-
     ]
-    }
-EOF
+})
+
 }
 
 
@@ -121,7 +117,7 @@ resource "aws_lambda_function" "file_upload_lambda" {
 
 
 resource "aws_iam_role" "state_machine_role" {
-    name = local.sm_trigger_role_name
+    name = local.files_statemachine_role_name
     assume_role_policy = <<EOF
     {
         "Version": "2012-10-17",
@@ -135,27 +131,25 @@ resource "aws_iam_role" "state_machine_role" {
             }
         ]        
     }
-    EOF
+EOF
 }
 
 resource "aws_iam_role_policy" "state_machine_policy" {
   name = local.files_statemachine_policy_name
   role = aws_iam_role.state_machine_role.id
 
-  policy = <<EOF
+  policy = jsonencode(
     {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-        "Action": [
-            "dynamodb:PutItem",
-        ],
-        "Effect": "Allow",
-        "Resource": "${aws_dynamodb_table.files_table.arn}"
-        }
-    ]
-    }
-EOF
+        Version = "2012-10-17",
+        Statement = [
+            {
+                Effect = "Allow",
+                Action = [ "dynamodb:PutItem" ],
+                Resource = "${aws_dynamodb_table.files_table.arn}"
+            }
+        ]
+    })
+
 }
 
 /*
