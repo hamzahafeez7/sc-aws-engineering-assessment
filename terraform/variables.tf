@@ -14,7 +14,7 @@ Assuming CloudOps & Technology Enablement to be teams/depts. at Swisscom DevOps 
 */
 
 variable "project" {
-    type = "string"
+    type = string
     default = "rd-cloudops"
     description = "The prefix assigned to all resources created for a particular project"
     nullable = false
@@ -36,22 +36,22 @@ Defining a local block to apply naming conventions to resources
     - S3 Bucket specifically reqiores a globally unique name as an identifier 
 */
 locals {
-    landing_bucket_name = "${var.project}-landing-bucket-${var.env}"
+    landing_bucket_name = "${var.project}-landing-bucket-${var.environment}"
 
     files_table_name  = "Files"
 
     sm_trigger_funtion_filepath = "./"
-    sm_trigger_function_name = "${var.project}-sm-trigger-function-${var.env}"
-    sm_trigger_role_name = "${var.project}-sm-trigger-function-role-${var.env}"
-    sm_trigger_policy_name = "${var.project}-sm-trigger-function-policy-${var.env}"
+    sm_trigger_function_name = "${var.project}-sm-trigger-function-${var.environment}"
+    sm_trigger_role_name = "${var.project}-sm-trigger-function-role-${var.environment}"
+    sm_trigger_policy_name = "${var.project}-sm-trigger-function-policy-${var.environment}"
 
 
-    files_statemachine_name = "${var.project}-filename-update-statemachine-${var.env}"
-    files_statemachine_role_name = "${var.project}-filename-update-statemachine-role-${var.env}"
-    files_statemachine_policy_name = "${var.project}-filename-update-statemachine-policy-${var.env}"
+    files_statemachine_name = "${var.project}-filename-update-statemachine-${var.environment}"
+    files_statemachine_role_name = "${var.project}-filename-update-statemachine-role-${var.environment}"
+    files_statemachine_policy_name = "${var.project}-filename-update-statemachine-policy-${var.environment}"
     
 
-    environment = "${var.env}"   
+    environment = "${var.environment}"   
 }
 
 
@@ -70,14 +70,15 @@ variable "region" {
 
 
 /*
-Tag enforcement to be enabled for all resources created
+Tag enforcement to be enabled for all resources created. 
+Currently removing for the sake of simplicity
 */
-variable "tags" {
-    type = object({
-        name = string
-        createdby = string
-        department = string
-        env = string
-        costcenter = number
-    })
-}
+# variable "tags" {
+#     type = object({
+#         name = string
+#         createdby = string
+#         department = string
+#         env = string
+#         costcenter = number
+#     })
+# }

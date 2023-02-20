@@ -22,15 +22,16 @@ resource "aws_s3_bucket" "landing_bucket" {
     versioning {
       enabled = true
     }
-
-    server_side_encryption_configuration {
-      rule {
+}
+resource "aws_s3_bucket_server_side_encryption_configuration" "landing_bucket_server_side_config" {
+    bucket = aws_s3_bucket.landing_bucket.id
+    rule {
         apply_server_side_encryption_by_default {
           sse_algorithm = "AES256"
         }
       }
-    }
 }
+  
 
 /*
 Assuming the DynamoDB Table is utilzed to track files uploaded to landing bucket (which can be high in volume) we can go with the following design choices
@@ -54,7 +55,7 @@ resource "aws_dynamodb_table" "files_table" {
 Assumptions and Design Choices here
 */
 resource "aws_iam_role" "lambda_function_role" {
-    nam = local.sm_trigger_role_name
+    name = local.sm_trigger_role_name
     assume_role_policy = <<EOF
     {
         "Version": "2012-10-17",
@@ -104,7 +105,7 @@ EOF
 
 
 resource "aws_lambda_function" "file_upload_lambda" {
-  filename = "python/sm_trigger_function.zip"
+  filename = "./python/sm_trigger_function.zip"
   function_name = local.sm_trigger_function_name
   role = aws_iam_role.lambda_function_role.arn
   handler = "sm_trigger.lambda_handler"
@@ -112,7 +113,7 @@ resource "aws_lambda_function" "file_upload_lambda" {
   depends_on = [ aws_iam_role.lambda_function_role]
   environment {
     variables = {
-      STATE_MACHINE_ARN = "${aws_sfn_state_machine.filename_update_state_machine}"
+      STATE_MACHINE_ARN = "${aws_sfn_state_machine.filename_update_state_machine.arn}"
     }
   }
   timeout = 30
@@ -150,7 +151,7 @@ resource "aws_iam_role_policy" "state_machine_policy" {
             "dynamodb:PutItem",
         ],
         "Effect": "Allow",
-        "Resource": "${aws_dynamodb_table.files_tale.arn}"
+        "Resource": "${aws_dynamodb_table.files_table.arn}"
         }
     ]
     }
@@ -162,6 +163,7 @@ Assumptions and Design Choices here
 */
 resource "aws_sfn_state_machine" "filename_update_state_machine" {
     name = local.files_statemachine_name
+    role_arn = aws_iam_role.state_machine_role.arn
     definition = jsonencode(
         {
             Comment = "Track files uploaded to S3"
