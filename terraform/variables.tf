@@ -32,7 +32,7 @@ variable "sm_trigger_code_path" {
 }
 variable "sm_trigger_output_path" {
     type = string
-    default = "./python/sm_trigger_function.zip"
+    default = "./python-zips"
 }
 
 /*
@@ -45,7 +45,6 @@ locals {
 
     files_table_name  = "Files"
 
-    sm_trigger_funtion_filepath = "./"
     sm_trigger_function_name = "${var.project}-sm-trigger-function-${var.environment}"
     sm_trigger_role_name = "${var.project}-sm-trigger-function-role-${var.environment}"
     sm_trigger_policy_name = "${var.project}-sm-trigger-function-policy-${var.environment}"

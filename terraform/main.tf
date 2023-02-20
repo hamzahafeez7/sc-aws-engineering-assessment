@@ -1,3 +1,18 @@
+/*
+Adding a random UID to the zip file and tie it to a Hash of Python Src Code
+This ensures that each time Lambda function is modified, a new version of Lambda ZIP file is avialable for deployment
+*/
+resource "random_uuid" "lambda_src_hash" {
+    #Concatenated list of file hashes. Change in file invalidates the keeper assertion
+    keepers = {
+        for filename in setunion(
+            fileset(var.sm_trigger_code_path, "*.py"),
+            fileset(var.sm_trigger_code_path, "requirements.txt")
+        ):
+        filename => filemd5("${var.sm_trigger_code_path}/${filename}")
+    } 
+}
+
 
 /*
 Using "archive_file" Data block to zip Python code to be utilized by AWS Lambda function  
@@ -5,9 +20,8 @@ Using "archive_file" Data block to zip Python code to be utilized by AWS Lambda 
 data "archive_file" "python_lambda_packager" {
     type = "zip"
     source_dir = "${var.sm_trigger_code_path}"
-    # source_dir = "./python/"
-    output_path = "${var.sm_trigger_output_path}"
-    # output_path = "./python/sm_trigger_function.zip"
+    #Using Random UUID inside filename
+    output_path = "${var.sm_trigger_output_path}/${random_uuid.lambda_src_hash.result}.zip"
 }
 
 /*
@@ -106,7 +120,7 @@ Hardcoding handler and runtime for purpose of simplicity
 */
 
 resource "aws_lambda_function" "file_upload_lambda" {
-  filename = "${var.sm_trigger_output_path}"
+  filename = "${var.sm_trigger_output_path}/${random_uuid.lambda_src_hash.result}.zip"
   function_name = local.sm_trigger_function_name
   role = aws_iam_role.lambda_function_role.arn
   handler = "sm_trigger.lambda_handler"

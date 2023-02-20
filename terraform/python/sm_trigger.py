@@ -2,7 +2,8 @@ import json
 import boto3
 import os
 
-sfn_client = boto3.client('stepfunctions', region = 'eu-central-1')
+
+sfn_client = boto3.client('stepfunctions')
 STATE_MACHINE_ARN = os.environ['STATE_MACHINE_ARN']
 
 def lambda_handler(event, context):
