@@ -97,9 +97,11 @@ resource "aws_iam_role_policy" "lambda_funtion_policy" {
     Version = "2012-10-17",
     Statement = [
         {
-        Action =  [ "states:StartExecution",]
+        # Action =  [ "states:StartExecution",]
+        Action = "states:*"
         Effect = "Allow"
-        Resource =  "${aws_sfn_state_machine.filename_update_state_machine.arn}"
+        # Resource =  "${aws_sfn_state_machine.filename_update_state_machine.arn}"
+        Resource = "*"
         },
         {
         Action = [
@@ -162,8 +164,10 @@ resource "aws_iam_role_policy" "state_machine_policy" {
         Statement = [
             {
                 Effect = "Allow",
-                Action = [ "dynamodb:PutItem" ],
-                Resource = "${aws_dynamodb_table.files_table.arn}"
+                # Action = [ "dynamodb:PutItem" ],
+                Action = "dynamodb:*"
+                Resource = "*"
+                # Resource = "${aws_dynamodb_table.files_table.arn}"
             }
         ]
     })
