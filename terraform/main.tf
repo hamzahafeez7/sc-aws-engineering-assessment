@@ -4,8 +4,8 @@ Using "archive_file" Data block to zip Python code to be utilized by AWS Lambda 
 */
 data "archive_file" "python_lambda_packager" {
     type = "zip"
-    source_file = "./python/sm_trigger.py"
-    output_path = "sm_trigger_function.zip"
+    source_dir = "./python/"
+    output_path = "./python/sm_trigger_function.zip"
 }
 
 /*
@@ -74,7 +74,7 @@ resource "aws_iam_role" "lambda_function_role" {
 
 resource "aws_iam_role_policy" "lambda_funtion_policy" {
   name = local.sm_trigger_policy_name
-  role = aws_iam_role.lambda_iam.id
+  role = aws_iam_role.lambda_function_role.id
 
   policy = <<EOF
     {
@@ -82,10 +82,7 @@ resource "aws_iam_role_policy" "lambda_funtion_policy" {
     "Statement": [
         {
         "Action": [
-            "s3:*",
-            "states:StartExecution",
-            "lambda:*", 
-            "cloudwatch:*" 
+            "states:StartExecution", 
         ],
         "Effect": "Allow",
         "Resource": "${aws_sfn_state_machine.filename_update_state_machine.arn}"
@@ -105,12 +102,14 @@ resource "aws_iam_role_policy" "lambda_funtion_policy" {
 EOF
 }
 
+
 resource "aws_lambda_function" "file_upload_lambda" {
-  filename = "file_upload_lambda.zip"
+  filename = "python/sm_trigger_function.zip"
   function_name = local.sm_trigger_function_name
   role = aws_iam_role.lambda_function_role.arn
   handler = "sm_trigger.lambda_handler"
   runtime = "python3.8"
+  depends_on = [ aws_iam_role.lambda_function_role]
   environment {
     variables = {
       STATE_MACHINE_ARN = "${aws_sfn_state_machine.filename_update_state_machine}"
@@ -188,19 +187,19 @@ resource "aws_sfn_state_machine" "filename_update_state_machine" {
 
 
 
-resource "aws_s3_bucket_notification" "bucket_" {
+resource "aws_s3_bucket_notification" "landing_bucket_notification" {
   bucket = aws_s3_bucket.landing_bucket.id
   lambda_function {
-    lambda_function_arn = aws_lambda_function.test_lambda.arn
-    events              = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+    lambda_function_arn = aws_lambda_function.file_upload_lambda.arn
+    events              = ["s3:ObjectCreated:*"]
 
   }
 }
 
-resource "aws_lambda_permission" "test" {
+resource "aws_lambda_permission" "lambda_function_permission" {
   statement_id  = "AllowS3Invoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.test_lambda.function_name
+  function_name = aws_lambda_function.file_upload_lambda.function_name
   principal     = "s3.amazonaws.com"
   source_arn    = "arn:aws:s3:::${aws_s3_bucket.landing_bucket.id}"
 }
