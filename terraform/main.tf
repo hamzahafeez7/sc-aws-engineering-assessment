@@ -175,7 +175,7 @@ resource "aws_sfn_state_machine" "filename_update_state_machine" {
                         "TableName": "${aws_dynamodb_table.files_table.name}",
                         "Item": {
                             "FileName": {
-                                "S.$": "$.Records[0].s3.object.key"
+                                "S.$": "$.s3Object.key"
                             }
                         }
                     },
