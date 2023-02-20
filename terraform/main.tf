@@ -4,8 +4,10 @@ Using "archive_file" Data block to zip Python code to be utilized by AWS Lambda 
 */
 data "archive_file" "python_lambda_packager" {
     type = "zip"
-    source_dir = "./python/"
-    output_path = "./python/sm_trigger_function.zip"
+    source_dir = "${var.sm_trigger_code_path}"
+    # source_dir = "./python/"
+    output_path = "${var.sm_trigger_output_path}"
+    # output_path = "./python/sm_trigger_function.zip"
 }
 
 /*
@@ -87,7 +89,7 @@ resource "aws_iam_role_policy" "lambda_funtion_policy" {
         },
         {
         Action = [
-            "s3:*",
+            #Permissions added for Lambda Execution
             "lambda:*", 
             "cloudwatch:*", 
         ],
@@ -98,15 +100,17 @@ resource "aws_iam_role_policy" "lambda_funtion_policy" {
 })
 
 }
+/*
+Hardcoding handler and runtime for purpose of simplicity
 
+*/
 
 resource "aws_lambda_function" "file_upload_lambda" {
-  filename = "./python/sm_trigger_function.zip"
+  filename = "${var.sm_trigger_output_path}"
   function_name = local.sm_trigger_function_name
   role = aws_iam_role.lambda_function_role.arn
   handler = "sm_trigger.lambda_handler"
   runtime = "python3.8"
-  depends_on = [ aws_iam_role.lambda_function_role]
   environment {
     variables = {
       STATE_MACHINE_ARN = "${aws_sfn_state_machine.filename_update_state_machine.arn}"
@@ -153,7 +157,14 @@ resource "aws_iam_role_policy" "state_machine_policy" {
 }
 
 /*
-Assumptions and Design Choices here
+Following design choices should be considered for Production Grade State Machine of similar workload
+1- Add separate states for Start (Pass State), PutItem and End (Pass). This helps segregate the actual workload from Start/Stop mechanisms
+2- Add a retry policy using Retry block which could be used with exponential backoff
+3- Add Error Handling logic using Catch Block and transition the state to an alternate state that;
+    - Adds CloudWatch Logs regarding failure
+    - Sends out SNS Notification regarding failure 
+    - Passes the Object-Key into a Dead-Letter Queue message in SQS (To be polled by separate failsafe workflow e.g. Lambda Function for adding items into DynamoDB Table)
+Disclaimer - For the sake of simplicity, the following state machine does not include these details
 */
 resource "aws_sfn_state_machine" "filename_update_state_machine" {
     name = local.files_statemachine_name

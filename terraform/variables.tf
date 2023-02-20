@@ -26,8 +26,13 @@ variable "environment" {
     description = "The postfix assigned to all resources based on environment: dev, stg, qa, uat, prod"
 }
 
-variable "sm_trigger_code_filepath" {
-    default = "./sm_trigger.py"
+variable "sm_trigger_code_path" {
+    type = string 
+    default = "./python/"
+}
+variable "sm_trigger_output_path" {
+    type = string
+    default = "./python/sm_trigger_function.zip"
 }
 
 /*
