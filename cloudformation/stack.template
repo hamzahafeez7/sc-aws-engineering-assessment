@@ -23,7 +23,7 @@ Resources:
       BucketName: !Sub ${BucketName}
       LoggingConfiguration:
         DestinationBucketName: !Ref S3LoggingBucket
-        LogFilePrefix: !Sub ${BucketName}
+        LogFilePrefix: !Sub ${BucketName}\
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
